@@ -31,13 +31,49 @@ REQUIRED_COLUMNS = [
 ]
 
 
+VALID_STATUSES = {"success", "failed"}
+
+
 def load_csv(file_bytes: bytes) -> pd.DataFrame:
-    """Parse uploaded CSV bytes into a validated DataFrame."""
+    """Parse uploaded CSV bytes into a validated DataFrame.
+
+    Raises ValueError with a specific, actionable message if:
+      - required columns are missing
+      - any row has a blank/invalid `status` value
+      - any row has a blank/unparseable `timestamp`
+
+    This exists because of a real bug found during testing: rows with a
+    blank `status` were silently dropped from both the "failed" and
+    "success" groups downstream (compute_summary uses `== "failed"` /
+    `== "success"` filters), so the app returned HTTP 200 with a
+    plausible-looking but wrong summary instead of flagging bad input.
+    """
     df = pd.read_csv(io.BytesIO(file_bytes))
+
     missing = [c for c in REQUIRED_COLUMNS if c not in df.columns]
     if missing:
         raise ValueError(f"CSV is missing required columns: {missing}")
+
+    # Normalize status for comparison, but keep original for error messages.
+    status_clean = df["status"].astype(str).str.strip().str.lower()
+    invalid_status_mask = ~status_clean.isin(VALID_STATUSES)
+    if invalid_status_mask.any():
+        bad_rows = df.loc[invalid_status_mask, "transaction_id"].astype(str).tolist()
+        raise ValueError(
+            "Found rows with a blank or invalid 'status' value (must be "
+            f"'success' or 'failed'). Affected transaction_id(s): {bad_rows[:10]}"
+            + (" ...and more" if len(bad_rows) > 10 else "")
+        )
+
     df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+    if df["timestamp"].isna().any():
+        bad_rows = df.loc[df["timestamp"].isna(), "transaction_id"].astype(str).tolist()
+        raise ValueError(
+            f"Found rows with a blank or unparseable 'timestamp'. "
+            f"Affected transaction_id(s): {bad_rows[:10]}"
+            + (" ...and more" if len(bad_rows) > 10 else "")
+        )
+
     df["is_new_device"] = df["is_new_device"].astype(str).str.lower() == "true"
     return df
 

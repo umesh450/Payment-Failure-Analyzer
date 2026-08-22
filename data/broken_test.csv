@@ -1,0 +1,26 @@
+transaction_id,timestamp,amount,payment_method,bank,status,error_code,device_type,is_new_device,retry_count
+TXN1001,2026-08-15 09:12:03,1499.00,UPI,HDFC,failed,BANK_TIMEOUT,mobile,false,0
+TXN1002,2026-08-15 09:14:22,899.00,card,ICICI,, ,mobile,false,0
+TXN1003,2026-08-15 09:20:11,25000.00,netbanking,SBI,failed,INSUFFICIENT_FUNDS,desktop,false,1
+TXN1004,2026-08-15 10:02:45,499.00,UPI,SBI,failed,BANK_TIMEOUT,mobile,true,0
+TXN1005,2026-08-15 10:05:10,1200.00,card,HDFC,failed,OTP_MISMATCH,mobile,false,2
+TXN1006,2026-08-15 10:10:33,3499.00,UPI,Paytm Payments Bank,failed,BANK_TIMEOUT,mobile,false,1
+TXN1007,2026-08-15 11:00:19,750.00,card,Axis,success,,desktop,false,0
+TXN1008,2026-08-15 11:05:44,15000.00,netbanking,SBI,failed,INSUFFICIENT_FUNDS,desktop,false,0
+TXN1009,2026-08-15 11:22:01,2200.00,UPI,HDFC,failed,BANK_TIMEOUT,mobile,false,0
+TXN1010,2026-08-15 12:00:00,999.00,card,ICICI,failed,OTP_MISMATCH,mobile,true,3
+TXN1011,2026-08-15 12:15:12,499.00,UPI,SBI,failed,BANK_TIMEOUT,mobile,false,1
+TXN1012,2026-08-15 12:40:55,8000.00,card,Axis,success,,mobile,false,0
+TXN1013,2026-08-15 13:05:23,1750.00,UPI,Paytm Payments Bank,failed,BANK_TIMEOUT,mobile,false,0
+TXN1014,2026-08-15 13:20:10,600.00,card,HDFC,failed,CARD_DECLINED,desktop,false,0
+TXN1015,2026-08-15 14:00:00,4300.00,UPI,SBI,failed,BANK_TIMEOUT,mobile,true,0
+TXN1016,2026-08-15 14:10:45,2999.00,card,ICICI,success,,desktop,false,0
+TXN1017,2026-08-15 14:30:12,999.00,UPI,HDFC,failed,BANK_TIMEOUT,mobile,false,2
+TXN1018,2026-08-15 15:00:00,500.00,card,Axis,failed,OTP_MISMATCH,mobile,false,1
+TXN1019,2026-08-15 15:20:33,12000.00,netbanking,SBI,failed,INSUFFICIENT_FUNDS,desktop,false,0
+TXN1020,2026-08-15 15:45:19,799.00,UPI,SBI,failed,BANK_TIMEOUT,mobile,false,0
+TXN1021,2026-08-15 16:00:00,650.00,card,HDFC,success,,mobile,false,0
+TXN1022,2026-08-15 16:15:44,3000.00,UPI,Paytm Payments Bank,failed,BANK_TIMEOUT,mobile,true,1
+TXN1023,2026-08-15 16:30:00,1100.00,card,ICICI,failed,CARD_DECLINED,mobile,false,0
+TXN1024,2026-08-15 17:00:12,900.00,UPI,SBI,failed,BANK_TIMEOUT,mobile,false,0
+TXN1025,2026-08-15 17:20:00,20000.00,netbanking,SBI,failed,INSUFFICIENT_FUNDS,desktop,false,1

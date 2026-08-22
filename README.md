@@ -117,3 +117,22 @@ Payment failure analysis sits at the center of what a payments platform
 needs to get right for merchants — every percentage point of avoidable
 failure is recovered revenue. This project is scoped to be a believable
 first version of an internal tool, not just a toy demo.
+
+## What broke during validation
+
+The most dangerous bug in this project was not a hard crash — it was a
+silent failure in CSV validation.
+
+During testing, we intentionally uploaded a broken CSV where one row had a
+blank `status` value. The app accepted the file, returned HTTP 200, and
+rendered a neat-looking summary with misleading numbers instead of flagging
+bad input. The underlying cause was in `load_csv()`: it checked whether the
+required columns existed, but it did not validate each row's `status` and
+`timestamp` before analysis began. As a result, invalid rows were silently
+dropped from the `failed` and `success` filters, and the dashboard showed
+plausible but wrong metrics.
+
+The fix: added explicit validation in `load_csv()` that checks every row's
+`status` and `timestamp` before analysis runs, and raises a clear error
+listing exactly which transaction IDs are problematic — instead of silently
+dropping bad rows and returning misleading numbers.
