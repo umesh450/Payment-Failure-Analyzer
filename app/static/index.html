@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Payment Failure Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0B1220;
+    --surface: #121B2E;
+    --surface-hi: #182238;
+    --border: #23304A;
+    --text: #E8ECF4;
+    --muted: #8793AD;
+    --amber: #FFB020;
+    --green: #34D399;
+    --coral: #FF6B4A;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header { margin-bottom: 40px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-size: 40px;
+    font-weight: 700;
+    margin: 0 0 12px;
+    letter-spacing: -0.01em;
+  }
+  .sub { color: var(--muted); font-size: 15px; max-width: 560px; }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .upload-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-hi);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color 0.15s ease, transform 0.1s ease;
+  }
+  .btn:hover { border-color: var(--amber); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--amber);
+    color: #1A1204;
+    border-color: var(--amber);
+  }
+  .btn-primary:hover { border-color: var(--amber); filter: brightness(1.08); }
+  input[type="file"] { display: none; }
+  .filename { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 22px 20px;
+  }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: var(--display);
+    font-size: 30px;
+    font-weight: 700;
+  }
+  .stat-value.warn { color: var(--coral); }
+  .stat-value.good { color: var(--green); }
+
+  .ledger-title {
+    font-family: var(--mono);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+  .ledger-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-key { flex: 0 0 180px; color: var(--text); }
+  .ledger-bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--surface-hi);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .ledger-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--amber), var(--coral));
+    border-radius: 4px;
+  }
+  .ledger-count { flex: 0 0 44px; text-align: right; color: var(--muted); }
+
+  .insight-card {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--amber);
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    background: var(--surface-hi);
+  }
+  .insight-title {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+  .insight-detail { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+  .insight-rec {
+    font-size: 13px;
+    color: var(--text);
+    background: rgba(255, 176, 32, 0.08);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .insight-rec b { color: var(--amber); }
+
+  .ai-summary {
+    font-size: 15px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+  .ai-badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--green);
+    color: #052A1D;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+  }
+  .ai-badge.off {
+    background: var(--surface-hi);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    font-size: 14px;
+  }
+  .loading {
+    text-align: center;
+    color: var(--amber);
+    padding: 60px 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+  h2.section-title {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Payments / Failure Diagnostics</div>
+    <h1>Payment Failure Analyzer</h1>
+    <p class="sub">Upload a transaction CSV and get an instant breakdown of why payments are failing — by bank, method, error code, and time of day — with AI-generated recommendations.</p>
+  </header>
+
+  <div class="panel">
+    <div class="upload-row">
+      <label class="btn btn-primary" for="fileInput">Upload CSV</label>
+      <input type="file" id="fileInput" accept=".csv" />
+      <button class="btn" id="sampleBtn">Try sample data</button>
+      <span class="filename" id="filename"></span>
+    </div>
+  </div>
+
+  <div id="results">
+    <div class="empty">No data analyzed yet. Upload a CSV or try the sample dataset above.</div>
+  </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('fileInput');
+const filenameEl = document.getElementById('filename');
+const sampleBtn = document.getElementById('sampleBtn');
+const results = document.getElementById('results');
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) {
+    filenameEl.textContent = fileInput.files[0].name;
+    uploadFile(fileInput.files[0]);
+  }
+});
+
+sampleBtn.addEventListener('click', () => {
+  filenameEl.textContent = 'sample_transactions.csv';
+  fetchSample();
+});
+
+function showLoading() {
+  results.innerHTML = '<div class="loading">ANALYZING TRANSACTIONS…</div>';
+}
+
+async function uploadFile(file) {
+  showLoading();
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch('/api/analyze', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+    render(data);
+  } catch (e) {
+    results.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+async function fetchSample() {
+  showLoading();
+  try {
+    const res = await fetch('/api/sample');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+    render(data);
+  } catch (e) {
+    results.innerHTML = `<div class="empty">Error: ${e.message}</div>`;
+  }
+}
+
+function ledgerRows(obj, max) {
+  const entries = Object.entries(obj).slice(0, max || 6);
+  const top = entries.length ? entries[0][1] : 1;
+  return entries.map(([key, count]) => `
+    <div class="ledger-row">
+      <div class="ledger-key">${key}</div>
+      <div class="ledger-bar-track"><div class="ledger-bar-fill" style="width:${(count / top) * 100}%"></div></div>
+      <div class="ledger-count">${count}</div>
+    </div>
+  `).join('');
+}
+
+function render(data) {
+  const s = data.summary;
+  const insights = data.insights;
+
+  let aiBlock = '';
+  if (data.ai_summary) {
+    aiBlock = `
+      <div class="panel">
+        <span class="ai-badge">AI Summary</span>
+        <div class="ai-summary">${data.ai_summary}</div>
+      </div>`;
+  } else if (!data.ai_available) {
+    aiBlock = `
+      <div class="panel">
+        <span class="ai-badge off">AI Summary Off</span>
+        <div class="ai-summary" style="color: var(--muted)">Set ANTHROPIC_API_KEY on the server to enable an AI-generated narrative summary. The rule-based insights below work without it.</div>
+      </div>`;
+  }
+
+  results.innerHTML = `
+    <div class="stat-grid">
+      <div class="stat">
+        <div class="stat-label">Total Transactions</div>
+        <div class="stat-value">${s.total_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Failed</div>
+        <div class="stat-value warn">${s.failed_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Succeeded</div>
+        <div class="stat-value good">${s.successful_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Failure Rate</div>
+        <div class="stat-value warn">${s.overall_failure_rate_pct}%</div>
+      </div>
+    </div>
+
+    ${aiBlock}
+
+    <div class="panel">
+      <h2 class="section-title">Insights</h2>
+      ${insights.map(i => `
+        <div class="insight-card">
+          <div class="insight-title">${i.title}</div>
+          <div class="insight-detail">${i.detail}</div>
+          <div class="insight-rec"><b>Recommendation —</b> ${i.recommendation}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="panel">
+      <div class="ledger-title">Failures by Error Code</div>
+      ${ledgerRows(s.failures_by_error_code)}
+    </div>
+
+    <div class="panel">
+      <div class="ledger-title">Failures by Bank</div>
+      ${ledgerRows(s.failures_by_bank)}
+    </div>
+
+    <div class="panel">
+      <div class="ledger-title">Failures by Payment Method</div>
+      ${ledgerRows(s.failures_by_payment_method)}
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
