@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Payment Failure Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F6F3EC;
+    --surface: #FFFFFF;
+    --ink: #1C1B19;
+    --muted-solid: #79736A;
+    --teal: #0F6E63;
+    --teal-tint: #E4EFEC;
+    --coral: #C8502F;
+    --border: #E3DDCF;
+    --serif: 'Fraunces', serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px 100px; }
+
+  .masthead {
+    border-bottom: 2px solid var(--ink);
+    padding: 28px 0 18px;
+    margin-bottom: 36px;
+  }
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 22px;
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--teal);
+  }
+  .date-stamp {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted-solid);
+  }
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 46px;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+  }
+  .masthead .dek {
+    font-size: 15.5px;
+    color: var(--muted-solid);
+    max-width: 600px;
+    font-style: italic;
+    font-family: var(--serif);
+  }
+
+  .action-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .btn {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    font-weight: 500;
+    padding: 11px 18px;
+    border-radius: 3px;
+    border: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+    text-transform: uppercase;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn-fill {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #fff;
+  }
+  .btn-fill:hover { background: #0B534A; border-color: #0B534A; }
+  input[type="file"] { display: none; }
+  .filename { font-family: var(--mono); font-size: 12px; color: var(--muted-solid); }
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin-bottom: 40px;
+  }
+  .stat {
+    padding: 0 20px;
+    border-left: 1px solid var(--border);
+  }
+  .stat:first-child { border-left: none; padding-left: 0; }
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted-solid);
+    margin-bottom: 6px;
+  }
+  .stat-value {
+    font-family: var(--serif);
+    font-size: 40px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .stat-value.flag { color: var(--coral); }
+  .stat-value.ok { color: var(--teal); }
+
+  h2.section-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  .section-rule {
+    height: 1px;
+    background: var(--ink);
+    margin-bottom: 22px;
+  }
+  .section-block { margin-bottom: 44px; }
+
+  .pullquote {
+    border-left: 3px solid var(--teal);
+    padding: 4px 0 4px 22px;
+    margin-bottom: 44px;
+  }
+  .pullquote-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 10px;
+  }
+  .pullquote-text {
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+  .pullquote.off .pullquote-label { color: var(--muted-solid); }
+  .pullquote.off { border-left-color: var(--border); }
+  .pullquote.off .pullquote-text { font-size: 14px; font-style: normal; font-family: var(--body); color: var(--muted-solid); }
+
+  .insight-item {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    padding: 22px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .insight-num {
+    font-family: var(--serif);
+    font-size: 26px;
+    color: var(--border);
+    font-weight: 600;
+  }
+  .insight-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 17px;
+    margin-bottom: 6px;
+  }
+  .insight-detail {
+    font-size: 14px;
+    color: var(--muted-solid);
+    margin-bottom: 10px;
+  }
+  .insight-rec {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--teal-tint);
+    color: #0B534A;
+    padding: 8px 12px;
+    border-radius: 3px;
+  }
+
+  .radial-grid {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 36px;
+    align-items: center;
+    margin-bottom: 44px;
+  }
+  .radial-legend { display: flex; flex-direction: column; gap: 12px; }
+  .legend-row { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-size: 12.5px; }
+  .legend-swatch { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .legend-key { flex: 1; color: var(--ink); }
+  .legend-val { color: var(--muted-solid); }
+
+  .breakdown-table { width: 100%; border-collapse: collapse; }
+  .breakdown-table td { padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .breakdown-table td.name { font-family: var(--mono); }
+  .breakdown-table td.count { text-align: right; font-family: var(--mono); color: var(--muted-solid); width: 60px; }
+  .breakdown-table td.bar-cell { width: 50%; }
+  .mini-bar-track { height: 6px; background: var(--teal-tint); border-radius: 3px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; background: var(--teal); border-radius: 3px; }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  .empty, .loading {
+    text-align: center;
+    padding: 90px 20px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted-solid);
+    border: 1px dashed var(--border);
+    border-radius: 4px;
+  }
+  .loading { color: var(--teal); }
+
+  @media (max-width: 640px) {
+    .stat-strip { grid-template-columns: repeat(2, 1fr); row-gap: 20px; }
+    .stat:nth-child(3) { border-left: none; padding-left: 0; }
+    .radial-grid, .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="masthead">
+    <div class="masthead-top">
+      <span class="kicker">Payments Diagnostics Desk</span>
+      <span class="date-stamp" id="dateStamp"></span>
+    </div>
+    <h1>The Failure Report</h1>
+    <p class="dek">An itemized account of where payments are breaking down, filed automatically from your transaction ledger.</p>
+  </div>
+
+  <div class="action-row">
+    <label class="btn btn-fill" for="fileInput">Submit CSV</label>
+    <input type="file" id="fileInput" accept=".csv" />
+    <button class="btn" id="sampleBtn">Use Sample Ledger</button>
+    <span class="filename" id="filename"></span>
+  </div>
+
+  <div id="results">
+    <div class="empty">No filing yet. Submit a CSV or use the sample ledger above to generate a report.</div>
+  </div>
+</div>
+
+<script>
+document.getElementById('dateStamp').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+const fileInput = document.getElementById('fileInput');
+const filenameEl = document.getElementById('filename');
+const sampleBtn = document.getElementById('sampleBtn');
+const results = document.getElementById('results');
+
+const PALETTE = ['#0F6E63', '#C8502F', '#B08A2E', '#5B6B8C', '#8C5B6B', '#6B8C5B', '#79736A'];
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length) {
+    filenameEl.textContent = fileInput.files[0].name;
+    uploadFile(fileInput.files[0]);
+  }
+});
+
+sampleBtn.addEventListener('click', () => {
+  filenameEl.textContent = 'sample_transactions.csv';
+  fetchSample();
+});
+
+function showLoading() {
+  results.innerHTML = '<div class="loading">FILING REPORT&hellip;</div>';
+}
+
+async function uploadFile(file) {
+  showLoading();
+  const form = new FormData();
+  form.append('file', file);
+  try {
+    const res = await fetch('/api/analyze', { method: 'POST', body: form });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+    render(data);
+  } catch (e) {
+    results.innerHTML = `<div class="empty">Filing failed: ${e.message}</div>`;
+  }
+}
+
+async function fetchSample() {
+  showLoading();
+  try {
+    const res = await fetch('/api/sample');
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Analysis failed');
+    render(data);
+  } catch (e) {
+    results.innerHTML = `<div class="empty">Filing failed: ${e.message}</div>`;
+  }
+}
+
+function buildDonut(obj) {
+  const entries = Object.entries(obj);
+  const total = entries.reduce((sum, [, v]) => sum + v, 0) || 1;
+  const r = 70, cx = 90, cy = 90, circumference = 2 * Math.PI * r;
+  let offset = 0;
+  const segments = entries.map(([key, val], i) => {
+    const frac = val / total;
+    const dash = frac * circumference;
+    const seg = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${PALETTE[i % PALETTE.length]}"
+      stroke-width="22" stroke-dasharray="${dash} ${circumference - dash}"
+      stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})" />`;
+    offset += dash;
+    return seg;
+  }).join('');
+
+  const svg = `<svg width="200" height="200" viewBox="0 0 180 180">${segments}
+    <circle cx="${cx}" cy="${cy}" r="46" fill="var(--paper)" />
+    </svg>`;
+
+  const legend = entries.map(([key, val], i) => `
+    <div class="legend-row">
+      <span class="legend-swatch" style="background:${PALETTE[i % PALETTE.length]}"></span>
+      <span class="legend-key">${key}</span>
+      <span class="legend-val">${val} &middot; ${Math.round(100 * val / total)}%</span>
+    </div>`).join('');
+
+  return { svg, legend };
+}
+
+function breakdownTable(obj, max) {
+  const entries = Object.entries(obj).slice(0, max || 6);
+  const top = entries.length ? entries[0][1] : 1;
+  return `<table class="breakdown-table">${entries.map(([key, count]) => `
+    <tr>
+      <td class="name">${key}</td>
+      <td class="bar-cell"><div class="mini-bar-track"><div class="mini-bar-fill" style="width:${(count / top) * 100}%"></div></div></td>
+      <td class="count">${count}</td>
+    </tr>`).join('')}</table>`;
+}
+
+function render(data) {
+  const s = data.summary;
+  const insights = data.insights;
+
+  let aiBlock = '';
+  if (data.ai_summary) {
+    aiBlock = `
+      <div class="pullquote">
+        <div class="pullquote-label">Analyst's Note</div>
+        <div class="pullquote-text">&ldquo;${data.ai_summary}&rdquo;</div>
+      </div>`;
+  } else if (!data.ai_available) {
+    aiBlock = `
+      <div class="pullquote off">
+        <div class="pullquote-label">Analyst's Note &mdash; Unavailable</div>
+        <div class="pullquote-text">Set ANTHROPIC_API_KEY on the server to enable an AI-generated narrative summary here. The itemized findings below work without it.</div>
+      </div>`;
+  }
+
+  const donut = buildDonut(s.failures_by_error_code);
+
+  results.innerHTML = `
+    <div class="stat-strip">
+      <div class="stat">
+        <div class="stat-label">Filed</div>
+        <div class="stat-value">${s.total_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Declined</div>
+        <div class="stat-value flag">${s.failed_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Cleared</div>
+        <div class="stat-value ok">${s.successful_transactions}</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Decline Rate</div>
+        <div class="stat-value flag">${s.overall_failure_rate_pct}%</div>
+      </div>
+    </div>
+
+    ${aiBlock}
+
+    <div class="section-block">
+      <h2 class="section-title">Findings</h2>
+      <div class="section-rule"></div>
+      ${insights.map((ins, i) => `
+        <div class="insight-item">
+          <div class="insight-num">${String(i + 1).padStart(2, '0')}</div>
+          <div>
+            <div class="insight-title">${ins.title}</div>
+            <div class="insight-detail">${ins.detail}</div>
+            <div class="insight-rec">&rarr; ${ins.recommendation}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="section-block">
+      <h2 class="section-title">Decline Reasons</h2>
+      <div class="section-rule"></div>
+      <div class="radial-grid">
+        ${donut.svg}
+        <div class="radial-legend">${donut.legend}</div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="two-col">
+        <div>
+          <h2 class="section-title">By Issuing Bank</h2>
+          <div class="section-rule"></div>
+          ${breakdownTable(s.failures_by_bank)}
+        </div>
+        <div>
+          <h2 class="section-title">By Payment Method</h2>
+          <div class="section-rule"></div>
+          ${breakdownTable(s.failures_by_payment_method)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
